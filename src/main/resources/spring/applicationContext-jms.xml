@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:amq="http://activemq.apache.org/schema/core"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://activemq.apache.org/schema/core
+       http://activemq.apache.org/schema/core/activemq-core-5.8.0.xsd">
+
+    <!--ActiveMQ 连接工厂方法1-->
+    <!--<amq:connectionFactory id="jmsConnectionFactory" brokerURL="tcp://localhost:61616" userName="admin" password="admin" />-->
+    <!--定义消息队列方法1-->
+    <!--<amq:queue name="destination" physicalName="queue" />-->
+
+
+    <!-- ActiveMQ 连接工厂方法2 -->
+    <!-- 真正可以产生Connection的ConnectionFactory，由对应的 JMS服务厂商提供-->
+    <!-- 如果连接网络：tcp://ip:61616；未连接网络：tcp://localhost:61616 以及用户名，密码-->
+    <bean id="jmsConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="tcp://localhost:61616" />
+        <property name="userName" value="admin" />
+        <property name="password" value="admin" />
+        <!--这里直接信任所有包-->
+        <!--<property name="trustedPackages" value="true" />-->
+        <!--添加信任具体包白名单-->
+        <property name="trustedPackages">
+            <list>
+                <value>com.tqf.activemq</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 定义JmsTemplate  实现类-->
+    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="jmsConnectionFactory"/>
+    </bean>
+
+    <!--=================================================队列queue1所有bean================================================= -->
+    <!--=================================================队列queue1所有bean================================================= -->
+    <!--=================================================队列queue1所有bean================================================= -->
+    <!--定义消息队列名称实例,构造方法引入实例-->
+    <bean id="destination" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg name="name" value="queue1"/>
+    </bean>
+    <!--定义生产者，生成消息实现类（实现类1和实现类2）-->
+    <bean id="producer" class="com.tqf.activemq.Producer">
+        <property name="template" ref="jmsTemplate" />
+        <property name="destination" ref="destination"/>
+    </bean>
+    <!--线程池实例1-->
+    <bean id="executorService" class="java.util.concurrent.ThreadPoolExecutor">
+        <constructor-arg value="5" index="0"/>  <!--同时跑5个线程-->
+        <constructor-arg value="10" index="1"/> <!--最大线程数量-->
+        <constructor-arg value="60" index="2"/> <!--60s当阻塞队列中没有任务时，等待时间达到keepAliveTime毫秒值时就会被自动唤醒，而不会永远地沉睡下去-->
+        <constructor-arg value="SECONDS" index="3" type="java.util.concurrent.TimeUnit"/>
+        <constructor-arg index="4">
+            <bean class="java.util.concurrent.LinkedBlockingQueue">
+                <constructor-arg value="100"/>
+            </bean>
+        </constructor-arg>
+        <constructor-arg index="5">
+            <bean class="java.util.concurrent.ThreadPoolExecutor$DiscardOldestPolicy"/>
+        </constructor-arg>
+    </bean>
+    <!--定义消费者。消费消息（实例1和实例2）-->
+    <bean id="consumer" class="com.tqf.activemq.Consumer">
+        <property name="querynum1" value="1"/>
+        <property name="executorService" ref="executorService"/>
+    </bean>
+    <!--定义监听器消费消息实例，这个是active包自带的监听器-->
+    <bean id="mqListener" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+        <constructor-arg ref="consumer" />                              <!--MessageListenerAdapter类的构造方法注入-->
+        <property name="defaultListenerMethod" value="queryconsume1" />    <!--setter 默认监听器执行方法,普通的setter注入-->
+    </bean>
+    <!--定义监听器容器实现类-->
+    <bean id="listenerContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="jmsConnectionFactory" />  <!--setter activemq连接参数-->
+        <property name="destination" ref="destination" />                   <!--setter activemq队列名称-->
+        <property name="messageListener" ref="mqListener" />                <!--setter activemq监听器-->
+    </bean>
+
+
+    <!--=================================================队列queue2所有bean================================================= -->
+    <!--=================================================队列queue2所有bean================================================= -->
+    <!--=================================================队列queue2所有bean================================================= -->
+    <bean id="destination2" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg name="name" value="queue2"/>
+    </bean>
+
+    <bean id="producer2" class="com.tqf.activemq.Producer">
+        <property name="template" ref="jmsTemplate" />
+        <property name="destination" ref="destination2"/>
+    </bean>
+    <!--线程池实例2-->
+    <bean id="executorService2" class="java.util.concurrent.ThreadPoolExecutor">
+        <constructor-arg value="5" index="0"/>  <!--同时跑5个线程-->
+        <constructor-arg value="10" index="1"/> <!--最大线程数量-->
+        <constructor-arg value="60" index="2"/> <!--60s当阻塞队列中没有任务时，等待时间达到keepAliveTime毫秒值时就会被自动唤醒，而不会永远地沉睡下去-->
+        <constructor-arg value="SECONDS" index="3" type="java.util.concurrent.TimeUnit"/>
+        <constructor-arg index="4">
+            <bean class="java.util.concurrent.LinkedBlockingQueue">
+                <constructor-arg value="100"/>
+            </bean>
+        </constructor-arg>
+        <constructor-arg index="5">
+            <bean class="java.util.concurrent.ThreadPoolExecutor$DiscardOldestPolicy"/>
+        </constructor-arg>
+    </bean>
+
+    <bean id="consumer2" class="com.tqf.activemq.Consumer">
+        <property name="querynum2" value="2"/>
+        <property name="executorService2" ref="executorService2"/>
+    </bean>
+
+    <bean id="mqListener2" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+        <constructor-arg ref="consumer2" />                              <!--MessageListenerAdapter类的构造方法注入-->
+        <property name="defaultListenerMethod" value="queryconsume2" />    <!--setter 默认监听器执行方法,普通的setter注入-->
+    </bean>
+
+    <bean id="listenerContainer2" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="jmsConnectionFactory" />  <!--setter activemq连接参数-->
+        <property name="destination" ref="destination2" />                   <!--setter activemq队列名称-->
+        <property name="messageListener" ref="mqListener2" />                <!--setter activemq监听器-->
+    </bean>
+
+</beans>

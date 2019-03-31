@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amq="http://activemq.apache.org/schema/core"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--注入实例，没有构造函数的时候可以这样-->
+    <!--<bean id="testbeanid" class="com.tqf.test.TestBean">-->
+        <!--<property name="num" value="10"/>-->
+        <!--<property name="name" value="tang"/>-->
+        <!--<property name="sex" value="男"/>-->
+    <!--</bean>-->
+    <!--等价于-->
+    <!--构造方法引入实例-->
+    <bean id="testbeanid" class="com.tqf.test.TestBean">
+        <constructor-arg name="num" value="10"/>
+        <constructor-arg name="name" value="tang"/>
+        <constructor-arg name="sex" value="男"/>
+    </bean>
+
+    <!--实现类bean-->
+    <bean id="testdao" class="com.tqf.test.TestDao">
+        <property name="testBean" ref="testbeanid"/>
+    </bean>
+
+</beans>
