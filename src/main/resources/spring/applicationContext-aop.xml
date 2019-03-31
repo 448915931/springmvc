@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-4.2.xsd">
+
+    <!--实例化对象-->
+    <bean id="helloWorldImpl1" class="com.tqf.aop.service.impl.HelloWorldImpl1" />
+    <bean id="helloWorldImpl2" class="com.tqf.aop.service.impl.HelloWorldImpl2" />
+    <bean id="timeHandler" class="com.tqf.aop.aopdao.TimeHandler" />
+    <bean id="logHandler" class="com.tqf.aop.aopdao.LogHandler" />
+
+    <!--对所有实现了HelloWorld接口的类 增加调用所有的方法时都会调用TimeHandler类的printTime方法，printTime方法在执行方法前和后都执行-->
+    <aop:config>
+        <aop:aspect id="time" ref="timeHandler">
+            <aop:pointcut id="addAllMethod" expression="execution(* com.tqf.aop.service.HelloWorld.*(..))" />
+            <aop:before method="printTime" pointcut-ref="addAllMethod" />
+            <aop:after method="printTime" pointcut-ref="addAllMethod" />
+        </aop:aspect>
+        <!--order为切面关注点的执行先后顺序，并且指定logHandler只会织入HelloWorld接口do开头的方法-->
+        <aop:aspect id="log" ref="logHandler" order="2">
+            <aop:pointcut id="printLog" expression="execution(* com.tqf.aop.service.HelloWorld.do*(..))" />
+            <aop:before method="LogBefore" pointcut-ref="printLog" />
+            <aop:after method="LogAfter" pointcut-ref="printLog" />
+        </aop:aspect>
+    </aop:config>
+</beans>
