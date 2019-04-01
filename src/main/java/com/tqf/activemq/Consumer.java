@@ -1,9 +1,11 @@
 package com.tqf.activemq;
 
-import org.springframework.stereotype.Service;
+import com.tqf.web.servcie.AppService;
+import com.tqf.web.servcie.impl.AppServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Created by Tang-QiFeng on 2019/3/30
@@ -14,6 +16,10 @@ public class Consumer {
     private ExecutorService executorService;
     private ExecutorService executorService2;
 
+    @Autowired
+    private AppService appService;
+
+
     /**
      *  线程池处理消费方法(队列1)
      *
@@ -21,8 +27,9 @@ public class Consumer {
      */
     public void queryconsume1(MyMessage message) {
         System.out.println(querynum1+"号队列消费"+message);
-        RunnableThread thread = new RunnableThread();
+        RunnableThread thread = new RunnableThread(appService);
         executorService.execute(thread);
+
         System.out.println(querynum1+"号消费完了"+message);
         //关闭线程池
 //        executorServic.shutdown();
@@ -74,22 +81,28 @@ public class Consumer {
     }
 }
 
-class RunnableThread implements Runnable
-{
+class RunnableThread implements Runnable {
+
+    private AppService app;
+
+    public RunnableThread(AppService app){
+        this.app=app;
+    }
+
     @Override
     public void run()
     {
         try {
             Thread.sleep(5000);
             System.out.println("通过线程池方式创建的线程：" + Thread.currentThread().getName() + " ");
+            System.out.println(app.gettestapp());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
     }
 }
-class RunnableThread2 implements Runnable
-{
+class RunnableThread2 implements Runnable {
     @Override
     public void run()
     {
